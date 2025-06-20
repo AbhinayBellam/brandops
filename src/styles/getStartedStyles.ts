@@ -1,35 +1,37 @@
-// styles/getStartedStyles.ts
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#24585C', // Teal background
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-  },
-  image: {
-    width: 200,
-    height: 200,
-    marginBottom: 30,
+    justifyContent: 'center',
+    paddingHorizontal: 30,
   },
   title: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 40,
+    color: '#FFFFFF',
     textAlign: 'center',
+    marginBottom: 20,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
   },
   button: {
-    backgroundColor: '#007bff',
-    paddingVertical: 12,
+    backgroundColor: '#facc15', // Yellow button
+    paddingVertical: 14,
     paddingHorizontal: 40,
-    borderRadius: 10,
-    marginVertical: 10,
+    borderRadius: 30,
+    elevation: 3,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#24585C', // Contrast text
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });

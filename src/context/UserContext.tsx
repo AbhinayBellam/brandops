@@ -94,23 +94,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     saveUser();
   }, [user]);
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.post('/users/login', {
-        email,
-        password,
-      });
+  const normalizeUser = (userData: any, token: string): User => {
+  const normalizedRole = typeof userData.role === 'string' ? userData.role : userData.role.name.toLowerCase();
+  const normalizedFranchiseStatus =
+    normalizedRole === 'franchisee' ? userData.franchiseStatus ?? 'Not_applied' : undefined;
 
-      const { user: userData, token } = response.data;
-      setUser({ ...userData, token });
-    } catch (err) {
-      console.error('Login error:', err);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
+  return {
+    _id: userData._id,
+    name: userData.name,
+    email: userData.email,
+    role: normalizedRole as Role,
+    franchiseStatus: normalizedFranchiseStatus,
+    token,
   };
+};
+
+ const login = async (email: string, password: string) => {
+  setIsLoading(true);
+  try {
+    const response = await axiosInstance.post('/users/login', { email, password });
+    const { user: userData, token } = response.data;
+    const normalized = normalizeUser(userData, token);
+    setUser(normalized);
+  } catch (err) {
+    console.error('Login error:', err);
+    throw err;
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const register = async (
     name: string,
@@ -128,7 +141,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       });
 
       const { user: userData, token } = response.data;
-      setUser({ ...userData, token });
+      const normalized = normalizeUser(userData, token);
+    setUser(normalized);
+
     } catch (err) {
       console.error('Register error:', err);
       throw err;
@@ -143,18 +158,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
   };
 
-  const refreshUser = async () => {
-    if (!user?.token) return;
+ const refreshUser = async () => {
+  if (!user?.token) return;
 
-    try {
-      const response = await axiosInstance.get('/auth/me');
-      setUser((prev) =>
-        prev ? { ...prev, ...response.data, token: prev.token } : null
-      );
-    } catch (err) {
-      console.error('Refresh user error:', err);
-    }
-  };
+  try {
+    const response = await axiosInstance.get('/auth/me');
+    setUser((prev) =>
+      prev ? {
+        ...prev,
+        ...response.data,
+        franchiseStatus:
+          response.data.franchiseStatus ?? prev.franchiseStatus,
+        token: prev.token
+      } : null
+    );
+  } catch (err) {
+    console.error('Refresh user error:', err);
+  }
+};
+
 
   return (
     <UserContext.Provider

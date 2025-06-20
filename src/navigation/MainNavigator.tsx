@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import FranchiseApplicationScreen from '../screens/Franchisee/FranchiseApplicationScreen';
 import PendingApprovalScreen from '../screens/Franchisee/FranchisePendingScreen';
 import ApplicationRejectedScreen from '../screens/Franchisee/FranchiseRejectedScreen';
-import FranchiseeDashboardScreen from '../screens/Franchisee/FranchiseDashboard';
+import FranchiseeDashboardScreen from '../screens/Franchisee/FranchiseDashboardScreen';
 // import FranchisorDashboardScreen from '../screens/Franchisor/FranchisorDashboardScreen';
 // import CustomerDashboardScreen from '../screens/Customer/CustomerDashboardScreen';
 

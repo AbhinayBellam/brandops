@@ -10,14 +10,13 @@ const FranchiseApplicationScreen = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-const { user } = useUser();
+  const { user, logout } = useUser();
 
-const token = user?.token;
-if (!token) {
-  Alert.alert('Authentication Error', 'Please log in again.');
-  return;
-}
-
+  const token = user?.token;
+  if (!token) {
+    Alert.alert('Authentication Error', 'Please log in again.');
+    return null;
+  }
 
   const handleSubmit = async () => {
     if (!region.trim()) {
@@ -27,7 +26,7 @@ if (!token) {
 
     setIsSubmitting(true);
     try {
-      const res = await axios.post(
+      await axios.post(
         'http://0.0.0.0:3000/api/franchise-applications',
         { region, notes },
         {
@@ -43,6 +42,13 @@ if (!token) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout', style: 'destructive', onPress: logout },
+    ]);
   };
 
   return (
@@ -78,6 +84,10 @@ if (!token) {
         ) : (
           <Text style={styles.buttonText}>Submit Application</Text>
         )}
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.button, { backgroundColor: '#888', marginTop: 20 }]} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
