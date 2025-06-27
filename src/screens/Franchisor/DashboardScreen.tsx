@@ -1,118 +1,111 @@
-// src/screens/Franchisor/DashboardScreen.tsx
-import React, { useLayoutEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { DrawerActions } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { FranchisorStackParamList } from '../../navigation/FranchisorNavigator';
+import React, { useState } from 'react';
+import {
+  View, Text, TouchableOpacity, ScrollView, SafeAreaView
+} from 'react-native';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import styles from '../../styles/Franchisor/franchisorDashboradStyles';
+import { Menu, Provider } from 'react-native-paper';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
 
-const franchises = [
-  { id: '1', name: 'Franchise A', sales: 125000 },
-  { id: '2', name: 'Franchise B', sales: 97000 },
-  { id: '3', name: 'Franchise C', sales: 147000 },
-];
-
-const salesByMonth = [
-  { month: 'January', total: 320000 },
-  { month: 'February', total: 280000 },
-  { month: 'March', total: 350000 },
-];
-
-const stockLevels = [
-  { franchise: 'Franchise A', items: 120 },
-  { franchise: 'Franchise B', items: 87 },
-  { franchise: 'Franchise C', items: 143 },
-];
-
-const DashboardScreen: React.FC = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<FranchisorStackParamList>>();
-
- useLayoutEffect(() => {
-  navigation.setOptions({
-    headerLeft: () => (
-      <TouchableOpacity onPress={() => navigation.getParent()?.dispatch(DrawerActions.toggleDrawer())} style={{ marginLeft: 16 }}>
-        <Ionicons name="menu" size={24} color="black" />
-      </TouchableOpacity>
-    ),
-    title: 'Franchisor Dashboard',
-  });
-}, [navigation]);
-
-
-  const navigateToSalesDetail = (franchiseId: string) => {
-    navigation.navigate('FranchiseSalesDetail', { franchiseId });
-  };
-
-  return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.heading}>Sales by Franchise</Text>
-      {franchises.map((f) => (
-        <TouchableOpacity key={f.id} onPress={() => navigateToSalesDetail(f.id)} style={styles.cardCoral}>
-          <Text style={styles.cardText}>{f.name}</Text>
-          <Text style={styles.cardValue}>₹{f.sales.toLocaleString()}</Text>
-        </TouchableOpacity>
-      ))}
-
-      <Text style={styles.heading}>Sales by Month</Text>
-      {salesByMonth.map((s, index) => (
-        <View key={index} style={styles.cardWood}>
-          <Text style={styles.cardText}>{s.month}</Text>
-          <Text style={styles.cardValue}>₹{s.total.toLocaleString()}</Text>
-        </View>
-      ))}
-
-      <Text style={styles.heading}>Stock Levels in Each Franchise</Text>
-      {stockLevels.map((s, index) => (
-        <View key={index} style={styles.cardBlue}>
-          <Text style={styles.cardText}>{s.franchise}</Text>
-          <Text style={styles.cardValue}>{s.items} items</Text>
-        </View>
-      ))}
-    </ScrollView>
-  );
+// Dummy data for overview
+const stats = {
+  totalFranchises: 10,
+  totalProducts: 120,
+  totalRevenue: '₹2,50,000',
+  commissionEarned: '₹45,000',
+  totalApplications: 18,
+  salesPerFranchise: [
+    { name: 'Franchise A', sales: 50000 },
+    { name: 'Franchise B', sales: 30000 },
+  ]
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f8f8f8',
-  },
-  heading: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 12,
-    color: '#333',
-  },
-  cardCoral: {
-    backgroundColor: '#FF7F50',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  cardWood: {
-    backgroundColor: '#DEB887',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  cardBlue: {
-    backgroundColor: '#ADD8E6',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  cardText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  cardValue: {
-    fontSize: 14,
-    color: '#fff',
-    marginTop: 4,
-  },
-});
+const Drawer = createDrawerNavigator();
 
-export default DashboardScreen;
+function CustomDrawerContent(props: any) {
+  return (
+    <DrawerContentScrollView {...props}>
+      {[
+        'Home',
+        'Franchises',
+        'Franchise Applications',
+        'Stock Requests',
+        'Stock Levels',
+        'Products',
+        'Commissions and Earnings',
+        'Reports'
+      ].map((item, index) => (
+        <DrawerItem
+          key={index}
+          label={item}
+          onPress={() => console.log(`Navigate to ${item}`)}
+          icon={({ color, size }) => (
+            <Icon name="chevron-right" size={size} color={color} />
+          )}
+        />
+      ))}
+    </DrawerContentScrollView>
+  );
+}
+
+function DashboardContent() {
+  const [menuVisible, setMenuVisible] = useState(false);
+  const navigation = useNavigation();
+  const userName = "Abhinay"; // Replace with dynamic name from state/context
+
+  const openMenu = () => setMenuVisible(true);
+  const closeMenu = () => setMenuVisible(false);
+
+  return (
+    <Provider>
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
+            <Icon name="menu" size={28} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Franchise Management System</Text>
+          <Menu
+            visible={menuVisible}
+            onDismiss={closeMenu}
+            anchor={
+              <TouchableOpacity onPress={openMenu} style={styles.profileCircle}>
+                <Text style={styles.profileText}>{userName[0]}</Text>
+              </TouchableOpacity>
+            }
+          >
+            <Menu.Item onPress={() => console.log('Profile')} title="Profile" />
+            <Menu.Item onPress={() => console.log('Logout')} title="Logout" />
+          </Menu>
+        </View>
+
+        {/* Overview Content */}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.card}><Text>Total Franchises: {stats.totalFranchises}</Text></View>
+          <View style={styles.card}><Text>Total Products: {stats.totalProducts}</Text></View>
+          <View style={styles.card}><Text>Total Revenue: {stats.totalRevenue}</Text></View>
+          <View style={styles.card}><Text>Commission Earned: {stats.commissionEarned}</Text></View>
+          <View style={styles.card}><Text>Franchise Applications: {stats.totalApplications}</Text></View>
+          <View style={styles.salesSection}>
+            <Text style={styles.salesTitle}>Sales per Franchise:</Text>
+            {stats.salesPerFranchise.map((franchise, index) => (
+              <Text key={index}>{franchise.name}: ₹{franchise.sales}</Text>
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Provider>
+  );
+}
+
+export default function FranchiseDashboardScreen() {
+  return (
+    <Drawer.Navigator
+      screenOptions={{ headerShown: false }}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
+      <Drawer.Screen name="DashboardContent" component={DashboardContent} />
+    </Drawer.Navigator>
+  );
+}
