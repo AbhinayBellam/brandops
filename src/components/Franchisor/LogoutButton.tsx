@@ -15,7 +15,7 @@ const LogoutButton = () => {
     await AsyncStorage.removeItem('userRole');
     navigation.reset({
       index: 0,
-      routes: [{ name: 'Login' }],
+      routes: [{ name: 'Auth' }], // Replace 'Login' with the correct route name from AuthStackParamList
     });
   };
 

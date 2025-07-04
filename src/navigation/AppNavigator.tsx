@@ -12,7 +12,8 @@ import FranchiseeDashboard from '../screens/Franchisee/FranchiseDashboardScreen'
 import FranchisePendingScreen from '../screens/Franchisee/FranchisePendingScreen';
 import FranchiseRejectedScreen from '../screens/Franchisee/FranchiseRejectedScreen';
 import FranchiseApplicationScreen from '../screens/Franchisee/FranchiseApplicationScreen';
-import FranchisorDashboard from '../screens/Franchisor/DashboardScreen';
+import FranchisorNavigator from './FranchisorNavigator';
+
 // import CustomerDashboard from '../screens/Customer/CustomerDashboard';
 
 export type AppStackParamList = {
@@ -70,7 +71,8 @@ const AppNavigator = () => {
         <Stack.Screen name="FranchisePending" component={FranchisePendingScreen} />
         <Stack.Screen name="FranchiseRejected" component={FranchiseRejectedScreen} />
         <Stack.Screen name="FranchiseApplication" component={FranchiseApplicationScreen} />
-        <Stack.Screen name="FranchisorDashboard" component={FranchisorDashboard} />
+        <Stack.Screen name="FranchisorDashboard" component={FranchisorNavigator} />
+
         {/* <Stack.Screen name="CustomerDashboard" component={CustomerDashboard} /> */}
       </Stack.Navigator>
     </NavigationContainer>

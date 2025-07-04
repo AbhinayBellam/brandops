@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from '../../styles/Franchisee/FranchiseApplicationStyles';
 import { useUser } from '../../context/UserContext';
 import axios from 'axios';
@@ -52,6 +53,7 @@ const FranchiseApplicationScreen = () => {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
     <View style={styles.container}>
       <Text style={styles.title}>Franchise Application</Text>
 
@@ -90,6 +92,7 @@ const FranchiseApplicationScreen = () => {
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
     </View>
+    </SafeAreaView>
   );
 };
 
