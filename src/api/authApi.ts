@@ -20,3 +20,20 @@ export const loginUser = async (userData: {
   const response = await axiosInstance.post('/users/login', userData);
   return response.data;
 };
+
+
+// Forgot Password (send OTP)
+export const forgotPassword = async (email: string) => {
+  const response = await axiosInstance.post('/users/forgot-password', { email });
+  return response.data;
+};
+
+// Reset Password (verify OTP + set new password)
+export const resetPassword = async (data: {
+  email: string;
+  otp: string;
+  newPassword: string;
+}) => {
+  const response = await axiosInstance.post('/users/reset-password', data);
+  return response.data;
+};

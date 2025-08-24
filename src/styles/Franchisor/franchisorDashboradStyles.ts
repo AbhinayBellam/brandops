@@ -6,28 +6,6 @@ export default StyleSheet.create({
     backgroundColor: '#395375',
     // paddingTop: 42,
   },
-  // header: {
-  //   height: 60,
-  //   backgroundColor: '#fff',
-  //   borderBottomColor: '#ddd',
-  //   borderBottomWidth: 1,
-  //   paddingHorizontal: 15,
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   justifyContent: 'space-between',
-  //   elevation: 4,
-  //   zIndex: 999
-  // },
-
-//   header: {
-//   flexDirection: 'row',
-//   justifyContent: 'space-between',
-//   alignItems: 'center',
-//   paddingHorizontal: 16,
-//   paddingVertical: 12,
-//   backgroundColor: '#fff',
-//   elevation: 2,
-// },
 
 // 
 header: {

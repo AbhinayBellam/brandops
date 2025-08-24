@@ -29,7 +29,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, Provider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
-import LogoutButton from '../../components/Franchisor/LogoutButton';  
+import FranchisorHeader from '../../components/Franchisor/FranchisorHeader'; 
 
 export default function ReportsScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -43,25 +43,7 @@ export default function ReportsScreen() {
     <Provider>
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-            <Icon name="menu" size={28} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Reports</Text>
-          <Menu
-            visible={menuVisible}
-            onDismiss={closeMenu}
-            anchor={
-              <TouchableOpacity onPress={openMenu} style={styles.profileCircle}>
-                <Text style={styles.profileText}>{userName[0]}</Text>
-              </TouchableOpacity>
-            }
-          >
-            <Menu.Item onPress={() => console.log('Profile')} title="Profile" />
-            {/* <Menu.Item onPress={() => console.log('Logout')} title="Logout" /> */}
-             <LogoutButton />
-          </Menu>
-        </View>
+        <FranchisorHeader title="Reports" />
 
         {/* Content */}
         <ScrollView contentContainerStyle={styles.container}>

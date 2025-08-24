@@ -1,158 +1,203 @@
 
-// // screens/Franchisor/FranchisesScreen.tsx
-// import React, { useState } from 'react';
-// import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
-
-// const initialFranchises = [
-//   { id: '1', name: 'Franchise A', region: 'North' },
-//   { id: '2', name: 'Franchise B', region: 'South' },
-// ];
-
-// export default function FranchisesScreen() {
-//   const [franchises, setFranchises] = useState(initialFranchises);
-
-//   const deleteFranchise = (id: string) => {
-//     setFranchises(prev => prev.filter(f => f.id !== id));
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>All Franchises</Text>
-//       <FlatList
-//         data={franchises}
-//         keyExtractor={item => item.id}
-//         renderItem={({ item }) => (
-//           <View style={styles.card}>
-//             <Text style={styles.name}>{item.name} - {item.region}</Text>
-//             <Button title="Delete" color="#F44336" onPress={() => deleteFranchise(item.id)} />
-//           </View>
-//         )}
-//       />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1, padding: 16, backgroundColor: '#E6F7FF' },
-//   title: { fontSize: 22, fontWeight: 'bold', color: '#FF7F50', marginBottom: 12 },
-//   card: { backgroundColor: '#FFF2E5', padding: 16, borderRadius: 10, marginBottom: 10 },
-//   name: { fontSize: 18, fontWeight: '600' },
-// });
 
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  Button,
   StyleSheet,
-  TouchableOpacity
+  Alert,
+  RefreshControl,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Menu, Provider } from 'react-native-paper';
-import LogoutButton from '../../components/Franchisor/LogoutButton';
+import FranchiseCard from '../../components/Franchisor/FranchiseCard';
+import {
+  fetchFranchises,
+  updateFranchise,
+  removeFranchise,
+} from '../../services/franchiseService';
+import { Franchise } from '../../types/franchise';
+import FranchisorHeader from '../../components/Franchisor/FranchisorHeader';
 
-const initialFranchises = [
-  { id: '1', name: 'Franchise A', region: 'North' },
-  { id: '2', name: 'Franchise B', region: 'South' },
-];
+const FranchisesScreen = () => {
+  const [franchises, setFranchises] = useState<Franchise[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-export default function FranchisesScreen() {
-  const [franchises, setFranchises] = useState(initialFranchises);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const navigation = useNavigation();
-  const userName = 'Abhinay';
+  // Edit Modal State
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editData, setEditData] = useState<Partial<Franchise>>({});
 
-  const deleteFranchise = (id: string) => {
-    setFranchises(prev => prev.filter(f => f.id !== id));
+  const loadFranchises = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchFranchises();
+      setFranchises(data);
+    } catch (err) {
+      console.error('Error fetching franchises:', err);
+      Alert.alert('Error', 'Failed to load franchises.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  return (
-    <Provider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#E6F7FF' }}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-            <Icon name="menu" size={28} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.title}>All Franchises</Text>
-          <Menu
-            visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
-            anchor={
-              <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.profileCircle}>
-                <Text style={styles.profileText}>{userName[0]}</Text>
-              </TouchableOpacity>
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this franchise?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeFranchise(id);
+              await loadFranchises();
+            } catch (err) {
+              console.error('Delete failed:', err);
+              Alert.alert('Error', 'Failed to delete franchise.');
             }
-          >
-            <Menu.Item onPress={() => console.log('Profile')} title="Profile" />
-            {/* <Menu.Item onPress={() => console.log('Logout')} title="Logout" /> */}
-             <LogoutButton />
-          </Menu>
-        </View>
+          },
+        },
+      ]
+    );
+  };
 
-        {/* Content */}
-        <View style={styles.container}>
-          <FlatList
-            data={franchises}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Text style={styles.name}>{item.name} - {item.region}</Text>
-                <Button title="Delete" color="#F44336" onPress={() => deleteFranchise(item.id)} />
-              </View>
-            )}
-          />
+  const handleEdit = (franchise: Franchise) => {
+    setEditData(franchise);
+    setEditModalVisible(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editData._id ) {
+      Alert.alert('Validation Error', 'Franchise ID is missing.');
+      return;
+    }
+    try {
+    const payload: Partial<Franchise> = {};
+    if (editData.name) payload.name = editData.name;
+    if (editData.region) payload.region = editData.region;
+    if (editData.commissionRate !== undefined) payload.commissionRate = Number(editData.commissionRate);
+
+    await updateFranchise(editData._id, payload);
+    setEditModalVisible(false);
+    await loadFranchises();
+  } catch (err) {
+    console.error('Update failed:', err);
+    Alert.alert('Error', 'Failed to update franchise.');
+  }
+};
+
+  useEffect(() => {
+    loadFranchises();
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <FranchisorHeader title="Franchises" />
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#4CAF50" style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={franchises}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
+            <FranchiseCard
+              franchise={item}
+              onDelete={handleDelete}
+              onEdit={() => handleEdit(item)}
+            />
+          )}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={loadFranchises} />
+          }
+          contentContainerStyle={{ padding: 16 }}
+        />
+      )}
+
+      {/* Edit Franchise Modal */}
+      <Modal visible={editModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Edit Franchise</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Franchise Name"
+              value={editData.name || ''}
+              onChangeText={(val) => setEditData((prev) => ({ ...prev, name: val }))}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Region"
+              value={editData.region || ''}
+              onChangeText={(val) => setEditData((prev) => ({ ...prev, region: val }))}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Commission Rate (%)"
+              keyboardType="numeric"
+              value={editData.commissionRate?.toString() || ''}
+              onChangeText={(val) =>
+                setEditData((prev) => ({ ...prev, commissionRate: Number(val) }))
+              }
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.saveButton]}
+                onPress={saveEdit}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </SafeAreaView>
-    </Provider>
+      </Modal>
+    </SafeAreaView>
   );
-}
+};
+
+export default FranchisesScreen;
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    elevation: 4,
-    zIndex: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FF7F50',
-  },
-  profileCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FF7F50',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  container: {
+  container: { flex: 1, backgroundColor: '#E6F7FF' },
+  modalOverlay: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#E6F7FF',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    padding: 20,
   },
-  card: {
-    backgroundColor: '#FFF2E5',
-    padding: 16,
+  modalBox: {
+    backgroundColor: '#fff',
     borderRadius: 10,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '600', marginBottom: 10 },
+  input: {
+    backgroundColor: '#f1f1f1',
+    borderRadius: 8,
+    padding: 10,
     marginBottom: 10,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  button: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, marginLeft: 8 },
+  cancelButton: { backgroundColor: '#ccc' },
+  saveButton: { backgroundColor: '#4CAF50' },
+  buttonText: { color: '#fff', fontWeight: 'bold' },
 });

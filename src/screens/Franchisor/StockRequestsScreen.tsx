@@ -62,7 +62,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, Provider } from 'react-native-paper';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import LogoutButton from '../../components/Franchisor/LogoutButton';
+import FranchisorHeader from '../../components/Franchisor/FranchisorHeader';
 
 const stockRequests = [
   { id: '1', franchise: 'Hyderabad', product: 'Coffee Beans', quantity: 20 },
@@ -86,25 +86,7 @@ const StockRequestsScreen = () => {
     <Provider>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#e0f7fa' }}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-            <Icon name="menu" size={28} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Stock Requests</Text>
-          <Menu
-            visible={menuVisible}
-            onDismiss={() => setMenuVisible(false)}
-            anchor={
-              <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.profileCircle}>
-                <Text style={styles.profileText}>{userName[0]}</Text>
-              </TouchableOpacity>
-            }
-          >
-            <Menu.Item onPress={() => console.log('Profile')} title="Profile" />
-            {/* <Menu.Item onPress={() => console.log('Logout')} title="Logout" /> */}
-             <LogoutButton />
-          </Menu>
-        </View>
+        <FranchisorHeader title="Stock Requests" /> 
 
         {/* Content */}
         <View style={styles.container}>

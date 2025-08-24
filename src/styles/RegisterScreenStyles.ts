@@ -1,18 +1,19 @@
 import { StyleSheet } from 'react-native';
+import { colors } from '../utils/colors';
 
 export default StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 24,
     alignSelf: 'center',
-    color: '#333',
+    color: colors.text,
   },
   input: {
     borderWidth: 1,
@@ -40,7 +41,7 @@ export default StyleSheet.create({
     fontSize: 13,
   },
   button: {
-    backgroundColor: '#24585C',
+    backgroundColor: colors.primary,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
@@ -57,7 +58,7 @@ export default StyleSheet.create({
     fontSize: 14,
   },
   linkText: {
-    color: '#24585C',
+    color: colors.secondary,
     fontWeight: '600',
   },
 });

@@ -6,49 +6,27 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  StatusBar
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AuthNavigator';
 import { useUser } from '../../context/UserContext';
 import styles from '../../styles/LoginScreenStyles';
 
+
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 const LoginScreen = () => {
-  const navigation = useNavigation<NavigationProp>(); // ✅ useNavigation inside component
-  const { user, login, isLoading } = useUser(); // ✅ useUser inside component
+  const navigation = useNavigation<NavigationProp>(); 
+  const { user, login, isLoading } = useUser(); 
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // ✅ Handle navigation after login
-  useEffect(() => {
-    if (user && user.token) {
-      if (user.role === 'franchisee') {
-        switch (user.franchiseStatus) {
-          case 'Approved':
-            navigation.replace('FranchiseeDashboard');
-            break;
-          case 'Pending':
-            navigation.replace('FranchisePending');
-            break;
-          case 'Rejected':
-            navigation.replace('FranchiseRejected');
-            break;
-          case 'Not_applied':
-          default:
-            navigation.replace('FranchiseApplication');
-            break;
-        }
-      } else if (user.role === 'franchisor') {
-        navigation.replace('Dashboard');
-      // } else if (user.role === 'customer') {
-      //   navigation.replace('CustomerDashboard');
-      // }
-    }}
-  }, [user]);
+
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -64,17 +42,34 @@ const LoginScreen = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
-    if (!validate()) return;
+const handleLogin = async () => {
+  if (!validate()) return;
 
-    try {
-      await login(email.trim(), password);
-    } catch (err: any) {
-      Alert.alert('Login Failed', err.message || 'Something went wrong');
+  try {
+    await login(email.trim(), password);
+  } catch (err: any) {
+    let errorMessage = 'Something went wrong. Please try again later.';
+
+    if (err.response?.status === 401) {
+      errorMessage = err.response.data?.message || 'Invalid credentials.';
+    } else if (err.response?.status === 404) {
+      errorMessage = err.response.data?.message || 'User not found.';
+    } else if (err.response?.status === 500) {
+      errorMessage = 'Server error. Please try again later.';
+    } else if (err.message?.toLowerCase().includes('network')) {
+      errorMessage = 'Network error. Please check your internet connection.';
     }
-  };
+
+    Alert.alert('Login Failed', errorMessage);
+  }
+};
+
+
+
 
   return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f8f8" />
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
 
@@ -112,6 +107,10 @@ const LoginScreen = () => {
       />
       {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
+      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { email })}>
+           <Text style={styles.linkText}>Forgot Password?</Text>
+       </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={isLoading}>
         {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
       </TouchableOpacity>
@@ -123,6 +122,7 @@ const LoginScreen = () => {
         </Text>
       </Text>
     </View>
+    </SafeAreaView>
   );
 };
 

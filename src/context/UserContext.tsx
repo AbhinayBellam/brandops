@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosInstance from '../api/axiosInstance';
 
@@ -15,7 +9,7 @@ type User = {
   _id: string;
   name: string;
   email: string;
-  role: Role | string;
+  role: Role;
   franchiseStatus?: FranchiseStatus;
   token: string;
 };
@@ -25,12 +19,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (
-    name: string,
-    email: string,
-    password: string,
-    role: Role
-  ) => Promise<void>;
+  register: (name: string, email: string, password: string, role: Role) => Promise<void>;
   refreshUser: () => Promise<void>;
 };
 
@@ -43,7 +32,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user and token from AsyncStorage on app start
+  // Normalize user and token
+  const normalizeUser = (userData: any, token: string): User => {
+    const normalizedRole = typeof userData.role === 'string'
+      ? userData.role.toLowerCase()
+      : userData.role.name.toLowerCase();
+
+    const normalizedFranchiseStatus =
+      normalizedRole === 'franchisee'
+        ? userData.franchiseStatus ?? 'Not_applied'
+        : undefined;
+
+    return {
+      _id: userData._id || userData.id,
+      name: userData.name,
+      email: userData.email,
+      role: normalizedRole,
+      franchiseStatus: normalizedFranchiseStatus,
+      token,
+    };
+  };
+
+  // Initial load from AsyncStorage
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -52,13 +62,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
         if (userData && token) {
           const parsed = JSON.parse(userData);
-          setUser({ ...parsed, token });
+          const restoredUser: User = { ...parsed, token };
 
-          // Set token in axios default header
+          setUser(restoredUser);
           axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          console.log(' Token restored and set in axiosInstance:', token);
         }
       } catch (err) {
-        console.error('Failed to load user/token from AsyncStorage:', err);
+        console.error(' Failed to load user/token from AsyncStorage:', err);
       } finally {
         setIsLoading(false);
       }
@@ -67,64 +78,54 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     loadUser();
   }, []);
 
-  // Save user and token in AsyncStorage on change
   useEffect(() => {
-    console.log('User changed:', user);
-    const saveUser = async () => {
-      try {
-        if (user) {
-            console.log('Role:', user.role);
-    console.log('Franchise Status:', user.franchiseStatus);
-          const { token, ...rest } = user;
-          await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(rest));
-          await AsyncStorage.setItem(TOKEN_STORAGE_KEY, token);
-
-          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {
-          await AsyncStorage.removeItem(USER_STORAGE_KEY);
-          await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
-
-          delete axiosInstance.defaults.headers.common['Authorization'];
-        }
-      } catch (err) {
-        console.error('Failed to persist user/token in AsyncStorage:', err);
+  const saveUser = async () => {
+    try {
+      if (user) {
+        const { token, ...rest } = user;
+        await AsyncStorage.setItem('user', JSON.stringify(rest));
+        await AsyncStorage.setItem('token', token);
+      } else {
+        await AsyncStorage.removeItem('user');
+        await AsyncStorage.removeItem('token');
       }
-    };
-
-    saveUser();
-  }, [user]);
-
-  const normalizeUser = (userData: any, token: string): User => {
-  const normalizedRole = typeof userData.role === 'string' ? userData.role : userData.role.name.toLowerCase();
-  const normalizedFranchiseStatus =
-    normalizedRole === 'franchisee' ? userData.franchiseStatus ?? 'Not_applied' : undefined;
-
-  return {
-    _id: userData._id,
-    name: userData.name,
-    email: userData.email,
-    role: normalizedRole as Role,
-    franchiseStatus: normalizedFranchiseStatus,
-    token,
+    } catch (err) {
+      console.error('Failed to persist user/token:', err);
+    }
   };
-};
 
- const login = async (email: string, password: string) => {
-  setIsLoading(true);
-  try {
-    const response = await axiosInstance.post('/users/login', { email, password });
-    const { user: userData, token } = response.data;
-    const normalized = normalizeUser(userData, token);
-    setUser(normalized);
-  } catch (err) {
-    console.error('Login error:', err);
-    throw err;
-  } finally {
-    setIsLoading(false);
+  saveUser();
+}, [user]);
+
+useEffect(() => {
+  if (user?.token) {
+    console.log('UserContext: Token set in axiosInstance', user.token);
   }
-};
+}, [user]);
 
 
+
+  // Login method
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const res = await axiosInstance.post('/users/login', { email, password });
+      const { user: userData, token } = res.data;
+      const normalized = normalizeUser(userData, token);
+      setUser(normalized);
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      console.log('Token set in axiosInstance:', token);
+      await AsyncStorage.setItem('token', token);
+      console.log(' Token saved:', token); 
+    } catch (err) {
+      console.error('Login error:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Register method
   const register = async (
     name: string,
     email: string,
@@ -133,17 +134,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.post('/users/register', {
+      const res = await axiosInstance.post('/users/register', {
         name,
         email,
         password,
         role,
       });
-
-      const { user: userData, token } = response.data;
+      const { user: userData, token } = res.data;
       const normalized = normalizeUser(userData, token);
-    setUser(normalized);
-
+      setUser(normalized);
     } catch (err) {
       console.error('Register error:', err);
       throw err;
@@ -152,31 +151,43 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Logout method
   const logout = async () => {
-    setUser(null);
+    
     await AsyncStorage.removeItem(USER_STORAGE_KEY);
     await AsyncStorage.removeItem(TOKEN_STORAGE_KEY);
+    delete axiosInstance.defaults.headers.common['Authorization'];
+    setUser(null);
   };
 
- const refreshUser = async () => {
-  if (!user?.token) return;
+  // Refresh user from backend
+  const refreshUser = async () => {
+    if (!user?.token) return;
 
-  try {
-    const response = await axiosInstance.get('/auth/me');
-    setUser((prev) =>
-      prev ? {
-        ...prev,
-        ...response.data,
-        franchiseStatus:
-          response.data.franchiseStatus ?? prev.franchiseStatus,
-        token: prev.token
-      } : null
-    );
-  } catch (err) {
-    console.error('Refresh user error:', err);
-  }
-};
+    try {
+      const res = await axiosInstance.get('/users/me');
+      const updatedUserData = res.data;
 
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updatedUserData,
+              franchiseStatus:
+                updatedUserData.franchiseStatus ?? prev.franchiseStatus,
+              token: prev.token,
+            }
+          : null
+      );
+    } catch (err: any) {
+      console.error('Refresh user error:', err);
+
+      if (err.response?.status === 401) {
+        console.warn('Token expired or invalid. Logging out.');
+        logout();
+      }
+    }
+  };
 
   return (
     <UserContext.Provider
@@ -189,6 +200,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 export const useUser = (): AuthContextType => {
   const context = useContext(UserContext);
-  if (!context) throw new Error('useUser must be used within a UserProvider');
+  if (!context) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
   return context;
 };

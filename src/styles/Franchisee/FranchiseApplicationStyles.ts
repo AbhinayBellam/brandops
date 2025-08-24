@@ -1,44 +1,51 @@
 import { StyleSheet } from 'react-native';
 
-export default StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+  },
+  scroll: {
+    padding: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
-    alignSelf: 'center',
     color: '#333',
   },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 4,
+    color: '#555',
+  },
   input: {
-    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 10,
+    borderRadius: 8,
     padding: 12,
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 14,
+    backgroundColor: '#fff',
   },
-  multilineInput: {
-    height: 100,
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
+    color: '#666',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+  },
+  textArea: {
+    minHeight: 80,
     textAlignVertical: 'top',
   },
-  errorInput: {
-    borderColor: 'red',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
-  },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#007AFF',
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 8,
+    marginTop: 24,
     alignItems: 'center',
-    marginTop: 10,
   },
   buttonText: {
     color: '#fff',
@@ -46,3 +53,5 @@ export default StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export default styles;
